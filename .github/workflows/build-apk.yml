@@ -12,13 +12,21 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          validate-wrappers: false
+
       - uses: android-actions/setup-android@v4
 
-      - name: Download official wrapper files
+      - name: Generate valid wrapper in empty dir
         run: |
-          mkdir -p gradle/wrapper
-          curl -sL -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.7.0/gradle/wrapper/gradle-wrapper.jar
-          curl -sL -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradlew
+          rm -rf gradle/wrapper/gradle-wrapper.jar gradlew
+          mkdir -p /tmp/empty gradle/wrapper
+          cd /tmp/empty
+          gradle wrapper --gradle-version 8.7 --no-daemon
+          cd $GITHUB_WORKSPACE
+          cp -r /tmp/empty/gradle/wrapper/* gradle/wrapper/
+          cp /tmp/empty/gradlew ./gradlew
           chmod +x gradlew
           ./gradlew --version
 
@@ -30,4 +38,3 @@ jobs:
         with:
           name: WePlayBridge-APK
           path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
